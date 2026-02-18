@@ -39,7 +39,7 @@ public class CustomProdAuthenticationProvider implements AuthenticationProvider 
 
             if (customer.getLockTime() != null) {
 
-                LocalDateTime unlockTime = customer.getLockTime().plusMinutes(5);
+                LocalDateTime unlockTime = customer.getLockTime().plusMinutes(1);
 
                 if (LocalDateTime.now().isAfter(unlockTime)) {
                     // Auto unlock
