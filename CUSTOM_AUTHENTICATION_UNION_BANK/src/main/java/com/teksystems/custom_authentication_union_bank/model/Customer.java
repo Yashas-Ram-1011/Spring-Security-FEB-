@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "customer")
 @Getter @Setter
@@ -21,4 +23,7 @@ public class Customer {
     private int failedAttempts;
     private boolean accountNonLocked = true;
 
+
+    @Column(name = "lock_time")
+    private LocalDateTime lockTime;
 }

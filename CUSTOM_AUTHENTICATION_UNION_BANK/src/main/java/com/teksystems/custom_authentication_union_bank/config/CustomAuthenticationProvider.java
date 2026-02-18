@@ -4,11 +4,14 @@ import com.teksystems.custom_authentication_union_bank.repository.CustomerReposi
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.LockedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
+
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Component
@@ -31,7 +34,24 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
 
         //  Check if account locked
         if (!customer.isAccountNonLocked()) {
-            throw new BadCredentialsException("Account is locked due to multiple failed attempts");
+
+            if (customer.getLockTime() != null) {
+
+                LocalDateTime unlockTime = customer.getLockTime().plusMinutes(5);
+
+                if (LocalDateTime.now().isAfter(unlockTime)) {
+                    // Auto unlock
+                    customer.setAccountNonLocked(true);
+                    customer.setFailedAttempts(0);
+                    customer.setLockTime(null);
+                    customerRepository.save(customer);
+                } else {
+                    throw new LockedException("Account is locked. Try again later.");
+                }
+
+            } else {
+                throw new LockedException("Account is locked.");
+            }
         }
 
 
@@ -44,6 +64,7 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
 
             if (attempts >= 3) {
                 customer.setAccountNonLocked(false);
+                customer.setLockTime(LocalDateTime.now());
             }
 
             customerRepository.save(customer);
@@ -60,12 +81,12 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
         return new UsernamePasswordAuthenticationToken(
                 email,
                 password,
-                List.of(() -> customer.getRole())
+                List.of(customer::getRole)
         );
     }
 
 
-    
+
     @Override
     public boolean supports(Class<?> authentication) {
         return UsernamePasswordAuthenticationToken.class.isAssignableFrom(authentication);

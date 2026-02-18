@@ -16,14 +16,23 @@ import static org.springframework.security.config.Customizer.withDefaults;
 public class ProjectSecurityConfig {
 
     @Bean
-    SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http,CustomAuthenticationProvider customAuthenticationProvider) throws Exception {
-        http.csrf(AbstractHttpConfigurer::disable)
+    SecurityFilterChain defaultSecurityFilterChain(
+            HttpSecurity http,
+            CustomAuthenticationProvider customAuthenticationProvider,
+            CustomAuthenticationEntryPoint customAuthenticationEntryPoint) throws Exception {
+
+        http
+                .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests((requests) -> requests
                         .requestMatchers("/myAccount", "/myBalance", "/myLoans", "/myCards").authenticated()
-                        .requestMatchers("/notices", "/contact", "/error", "/register").permitAll())
-                        .authenticationProvider(customAuthenticationProvider);
-        http.formLogin(withDefaults());
-        http.httpBasic(withDefaults());
+                        .requestMatchers("/notices", "/contact", "/error", "/register").permitAll()
+                )
+                .authenticationProvider(customAuthenticationProvider)
+                .httpBasic(httpBasic ->
+                        httpBasic.authenticationEntryPoint(customAuthenticationEntryPoint)
+                )
+                .formLogin(withDefaults());
+
         return http.build();
     }
 
