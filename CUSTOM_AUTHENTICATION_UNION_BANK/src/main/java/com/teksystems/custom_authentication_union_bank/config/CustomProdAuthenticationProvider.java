@@ -16,9 +16,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Component
-@Profile("!prod")
+@Profile("prod")
 @RequiredArgsConstructor
-public class CustomAuthenticationProvider implements AuthenticationProvider {
+public class CustomProdAuthenticationProvider implements AuthenticationProvider {
 
     private final CustomerRepository customerRepository;
     private final PasswordEncoder passwordEncoder;
@@ -28,15 +28,62 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
             throws AuthenticationException {
 
         String email = authentication.getName();
+        String password = authentication.getCredentials().toString();
 
         Customer customer = customerRepository.findByEmail(email)
                 .orElseThrow(() -> new BadCredentialsException("User not found"));
 
-        // DEV MODE → Always authenticate successfully
+
+        //  Check if account locked
+        if (!customer.isAccountNonLocked()) {
+
+            if (customer.getLockTime() != null) {
+
+                LocalDateTime unlockTime = customer.getLockTime().plusMinutes(5);
+
+                if (LocalDateTime.now().isAfter(unlockTime)) {
+                    // Auto unlock
+                    customer.setAccountNonLocked(true);
+                    customer.setFailedAttempts(0);
+                    customer.setLockTime(null);
+                    customerRepository.save(customer);
+                } else {
+                    throw new LockedException("Account is locked. Try again later.");
+                }
+
+            } else {
+                throw new LockedException("Account is locked.");
+            }
+        }
+
+
+
+        //  Wrong password
+        if (!passwordEncoder.matches(password, customer.getPwd())) {
+
+            int attempts = customer.getFailedAttempts() + 1;
+            customer.setFailedAttempts(attempts);
+
+            if (attempts >= 3) {
+                customer.setAccountNonLocked(false);
+                customer.setLockTime(LocalDateTime.now());
+            }
+
+            customerRepository.save(customer);
+
+            throw new BadCredentialsException("Invalid password");
+        }
+
+
+
+        //  Successful login → reset attempts
+        customer.setFailedAttempts(0);
+        customerRepository.save(customer);
+
         return new UsernamePasswordAuthenticationToken(
                 email,
-                null,
-                List.of(() -> customer.getRole())
+                password,
+                List.of(customer::getRole)
         );
     }
 
