@@ -18,4 +18,7 @@ public class Customer {
     private String role;
 
 
+    private int failedAttempts;
+    private boolean accountNonLocked = true;
+
 }
