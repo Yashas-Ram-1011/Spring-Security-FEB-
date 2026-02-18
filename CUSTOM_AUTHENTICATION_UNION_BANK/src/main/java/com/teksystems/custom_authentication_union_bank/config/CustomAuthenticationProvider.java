@@ -2,6 +2,7 @@ package com.teksystems.custom_authentication_union_bank.config;
 import com.teksystems.custom_authentication_union_bank.model.Customer;
 import com.teksystems.custom_authentication_union_bank.repository.CustomerRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Profile;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.LockedException;
@@ -15,6 +16,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Component
+@Profile("!prod")
 @RequiredArgsConstructor
 public class CustomAuthenticationProvider implements AuthenticationProvider {
 
