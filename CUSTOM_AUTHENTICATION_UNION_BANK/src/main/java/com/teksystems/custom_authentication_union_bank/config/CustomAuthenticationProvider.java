@@ -23,6 +23,8 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
     private final CustomerRepository customerRepository;
     private final PasswordEncoder passwordEncoder;
 
+    // password validation is bypassed and account locking is disabled
+    // This helps developers test APIs without being blocked by security rules.
     @Override
     public Authentication authenticate(Authentication authentication)
             throws AuthenticationException {

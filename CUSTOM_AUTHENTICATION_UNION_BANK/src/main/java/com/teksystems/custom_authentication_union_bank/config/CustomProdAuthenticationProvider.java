@@ -64,7 +64,7 @@ public class CustomProdAuthenticationProvider implements AuthenticationProvider 
             int attempts = customer.getFailedAttempts() + 1;
             customer.setFailedAttempts(attempts);
 
-            if (attempts >= 3) {
+            if (attempts >= 5) {
                 customer.setAccountNonLocked(false);
                 customer.setLockTime(LocalDateTime.now());
             }
@@ -76,7 +76,7 @@ public class CustomProdAuthenticationProvider implements AuthenticationProvider 
 
 
 
-        //  Successful login → reset attempts
+        //  Successful login  reset attempts
         customer.setFailedAttempts(0);
         customerRepository.save(customer);
 
