@@ -23,6 +23,7 @@ public class ProjectSecurityProdConfig {
             CustomAuthenticationEntryPoint customAuthenticationEntryPoint) throws Exception {
 
         http
+                .sessionManagement(sessionManagement -> sessionManagement.invalidSessionUrl("/invalid"))
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests((requests) -> requests
                         .requestMatchers("/myAccount", "/myBalance", "/myLoans", "/myCards").authenticated()
